@@ -5,29 +5,24 @@ import 'package:fluter_ui/tabs/pizza_tab.dart';
 import 'package:fluter_ui/tabs/smoothie_tab.dart';
 import 'package:fluter_ui/utils/my_tab.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:fluter_ui/pages/login_page.dart'; // Asegúrate de importar tu página de login
 
 class HomePage extends StatefulWidget {
-  final bool isGuest; // Define la variable
+  final bool isGuest;
 
-  const HomePage({super.key, required this.isGuest}); // Así la almacenas en la clase
+  const HomePage({super.key, required this.isGuest});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
-
 class _HomePageState extends State<HomePage> {
-  //Lista de Tabs
   List<Widget> myTabs = [
-    //DonutTab
     MyTab(iconPath: "lib/icons/donut.png"),
-    //BurgerTab
     MyTab(iconPath: "lib/icons/burger.png"),
-    //PizzaTab
     MyTab(iconPath: "lib/icons/pizza.png"),
-    //SmoothieTab
     MyTab(iconPath: "lib/icons/smoothie.png"),
-    //PancakesTab
     MyTab(iconPath: "lib/icons/pancakes.png"),
   ];
 
@@ -41,6 +36,17 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // Método para cerrar sesión y regresar a la pantalla de login
+  Future<void> _signOut() async {
+    await Supabase.instance.client.auth.signOut();
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginPage()), // Usa tu LoginPage existente
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -48,73 +54,65 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          //Icono de la izquierda
-          leading: Icon(
-            Icons.menu,
-            color: Colors.grey[800],
-          ),
+          elevation: 0,
+          leading: Icon(Icons.menu, color: Colors.grey[800]),
           actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 24.0),
+            if (!widget.isGuest)
+              IconButton(
+                icon: const Icon(Icons.logout, color: Colors.red),
+                tooltip: 'Cerrar sesión',
+                onPressed: _signOut,
+              ),
+            const Padding(
+              padding: EdgeInsets.only(right: 16.0),
               child: Icon(Icons.person),
-            )
+            ),
           ],
         ),
         body: Column(
           children: [
-            //Texto "I want to eat"
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 36.0, vertical: 18.0),
+              padding: const EdgeInsets.symmetric(horizontal: 36.0, vertical: 18.0),
               child: Row(
                 children: [
-                  Text(
-                    "I want to ",
-                    style: TextStyle(fontSize: 32),
-                  ),
+                  const Text("I want to ", style: TextStyle(fontSize: 32)),
                   Text(
                     "Eat",
                     style: TextStyle(
-                        // Tamaño de letra
-                        fontSize: 32,
-                        // Negritas
-                        fontWeight: FontWeight.bold,
-                        // Subrayado
-                        decoration: TextDecoration.underline),
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline,
+                    ),
                   )
                 ],
               ),
             ),
-
-            //Tab bar
             TabBar(tabs: myTabs),
-            //Tab bar view
             Expanded(
-                child: TabBarView(children: [
-              DonutTab(onAddToCart: updateCart),
-              BurgerTab(onAddToCart: updateCart),
-              PizzaTab(onAddToCart: updateCart),
-              SmoothieTab(onAddToCart: updateCart),
-              PancakesTab(onAddToCart: updateCart)
-            ])),
-            //Carrito
+              child: TabBarView(children: [
+                DonutTab(onAddToCart: updateCart),
+                BurgerTab(onAddToCart: updateCart),
+                PizzaTab(onAddToCart: updateCart),
+                SmoothieTab(onAddToCart: updateCart),
+                PancakesTab(onAddToCart: updateCart),
+              ]),
+            ),
             Container(
               color: Colors.white,
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 28),
+                    padding: const EdgeInsets.only(left: 28),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           '$totalItems Items | \$$totalPrice',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        Text(
+                        const Text(
                           'Delivery Charges Included',
                           style: TextStyle(fontSize: 12),
                         ),
@@ -122,15 +120,16 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.pink,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12)),
-                      child: const Text(
-                        'View Cart',
-                        style: TextStyle(color: Colors.white),
-                      ))
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.pink,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    child: const Text(
+                      'View Cart',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )
                 ],
               ),
             )
